@@ -1,21 +1,24 @@
-# SPORTS LIVE (MVP)
+# SPORTS LIVE (Expanded MVP)
 
-スマートフォン優先のPWA試作です。試合情報は架空データを使わず、ESPNの公開スコアボードAPIからブラウザで取得します。
+スマートフォン優先のPWA試作です。架空データは生成しません。
 
-## 起動
+## データ取得先
+- ESPN public scoreboard endpoint: MLB、大学野球、NBA、WNBA、NCAA男女バスケ、NBA G League、NBL、FIBA、複数のサッカーリーグを取得対象にしています。リーグごとに返却データが空の場合は「試合なし」として扱います。
+- TheSportsDB Free API: 日付別イベントを補助的に取得し、ESPN側の試合と重複するものは統合します。無料プランはライブスコアを保証しないため、同ソースの試合を「LIVE」と表示せず、詳細統計も提供しません。出典を画面に表示します。
 
-静的ホスティングへ `index.html`, `manifest.webmanifest`, `sw.js` を配置してください。PWA/Service Worker は HTTPS または localhost が必要です。ローカル確認はプロジェクトフォルダで `python -m http.server 8000` を実行し、`http://localhost:8000` を開きます。
+## 起動・公開
+静的ホスティングへ `index.html`, `manifest.webmanifest`, `sw.js` を配置してください。PWA/Service Worker は HTTPS または localhost が必要です。
 
-## 現在の実装
-- ESPN Scoreboard API: MLB、NBA、プレミアリーグ、ラ・リーガ、セリエA、ブンデスリーガ、UEFA Champions League
-- 日付選択、競技切り替え、検索、ステータスフィルター、お気に入り（localStorage）
-- 試合詳細、経過/スタッツ/ラインナップの提供有無表示
-- 60秒ごとの表示中更新、手動更新、ダーク/ライトテーマ、PWAシェルキャッシュ
-- エラーや空の試合一覧を明示。架空データは表示しない
+## 機能
+- 日付選択、競技切り替え、検索、ステータスフィルター、お気に入り
+- 複数リーグの取得、TheSportsDBの補助データ取得、重複排除
+- 5件ずつの並列取得で一斉アクセスを抑制
+- 60秒ごとの画面表示中更新、手動更新、ダーク/ライトテーマ
+- データ取得状況と取得元の表示
 
 ## 制限と注意
 - ESPNの公開APIは正式な一般開発者向けSLAや永続利用保証を確認できていません。公開・商用利用前にデータ利用規約、ロゴ利用、キャッシュ、再配信条件を確認してください。
-- NPB、Bリーグ、JリーグはこのMVPでは未対応です。存在しない試合やデータで補完しません。
-- 一部の詳細タブはAPIレスポンスにデータがある場合のみ表示内容が充実します。
-- PWAアイコンはまだ追加していません。
-- ここではビルド/ブラウザ実機テストは実行していません。公開前にiPhone Safariで通信、表示、Service Worker、各APIのCORSを確認してください。
+- TheSportsDBの無料APIはリクエスト制限があり、無料枠ではライブスコア機能を提供しないと案内されています。データは補助的な日程・結果としてのみ利用します。利用条件: https://www.thesportsdb.com/docs_terms_of_use.php
+- NPB、B.LEAGUEは未対応です。JリーグのESPN対応は対象コードを追加していますが、実際のレスポンス/CORSをiPhone Safariで確認する必要があります。
+- ブラウザのネットワーク制限、API側の変更、CORS、リーグの季節によって試合数は変わります。
+- この環境から外部APIへの直接接続テストはできなかったため、追加リーグ・TheSportsDBの実レスポンスは未検証です。iPhoneで公開URLを開いて確認してください。
