@@ -1,30 +1,23 @@
-# SPORTS LIVE (Expanded MVP)
+# SPORTS LIVE 完全版（複数ソース試行・フォールバック付き）
 
-スマートフォン優先のPWA試作です。架空データは生成しません。
+## 公開
+GitHub Pages の公開リポジトリ直下に `index.html`、`manifest.webmanifest`、`sw.js` を配置してください。
 
-## データ取得先
-- ESPN public scoreboard endpoint: MLB、大学野球、NBA、WNBA、NCAA男女バスケ、NBA G League、NBL、FIBA、複数のサッカーリーグを取得対象にしています。リーグごとに返却データが空の場合は「試合なし」として扱います。
-- TheSportsDB Free API: 日付別イベントを補助的に取得し、ESPN側の試合と重複するものは統合します。無料プランはライブスコアを保証しないため、同ソースの試合を「LIVE」と表示せず、詳細統計も提供しません。出典を画面に表示します。
-- NPB専用取得: TheSportsDBのNippon Baseball League（league ID 4591）の2026シーズンデータを追加取得し、選択日の試合だけを表示します。
-- B.LEAGUE専用取得: TheSportsDBのJapanese B1 League（league ID 4977）のシーズンデータを追加取得します。season labelは現状 `2025-2026` を指定しているため、2026-27の全日程が返るかは実機確認が必要です。
+## 表示対象
+- MLB：ESPN Scoreboardを優先し、失敗または対象球団の試合が0件の場合はMLB Stats APIを試行。ロサンゼルス・ドジャース（LAD）、シカゴ・カブス（CHC）、サンディエゴ・パドレス（SD/SDP）、ニューヨーク・メッツ（NYM）、ボストン・レッドソックス（BOS）、ロサンゼルス・エンゼルス（LAA/ANA）、トロント・ブルージェイズ（TOR）、ヒューストン・アストロズ（HOU）、シカゴ・ホワイトソックス（CWS/CHW）の試合のみ。相手チームは問わない。
+- NPB：TheSportsDBの日別イベントを優先し、データがない場合はシーズンイベントを試行。国内12球団に合致するイベントのみ表示。
+- B.LEAGUE：TheSportsDBの日別イベントを優先し、データがない場合はリーグID 4977 の現行シーズン表記（YYYY-YYYY / YYYY-YY）など複数のシーズン指定を試行。
+- その他：NBA、プレミアリーグ、ラ・リーガ、セリエA、ブンデスリーガ、UEFA Champions League はESPN scoreboardを使用。
 
-- NPB official scoreboard fallback link: https://bis.npb.or.jp/scores/
-- B.LEAGUE official schedule/results fallback link: https://www.bleague.jp/schedule/
+## データ取得の方針
+- MLBはESPN Scoreboard→MLB Stats APIの順に試し、NPB/B.LEAGUEはTheSportsDBの日別→シーズン取得の順に試します。
+- データ提供元に存在しない試合・スコアは生成しません。
+- NPB/B.LEAGUEの自動取得が空または失敗した場合、公式日程・速報ページへのリンクを表示します。公式サイトリンクは外部ページを開くフォールバックであり、アプリ内自動取得を意味しません。
+- 同じ日付・競技・ホーム/アウェイの組み合わせを重複排除します。
+- 60秒ごとに表示中のみ自動更新します。
 
-## 起動・公開
-静的ホスティングへ `index.html`, `manifest.webmanifest`, `sw.js` を配置してください。PWA/Service Worker は HTTPS または localhost が必要です。
+## 検証・制限
+JavaScript構文検査とZIP構造検査を行います。実行環境のネットワーク制限により、各外部APIへの実リクエスト、CORS、最新シーズンの収録範囲はここでは検証できていません。特にTheSportsDBの無料エンドポイントはNPB全試合やB.LEAGUEの全ディビジョンを網羅する保証がありません。画面の取得元ステータスで結果を確認してください。
 
-## 機能
-- 日付選択、競技切り替え、検索、ステータスフィルター、お気に入り
-- 複数リーグの取得、TheSportsDBの補助データ取得、重複排除
-- 5件ずつの並列取得で一斉アクセスを抑制
-- 60秒ごとの画面表示中更新、手動更新、ダーク/ライトテーマ
-- データ取得状況と取得元の表示
-
-## 制限と注意
-- ESPNの公開APIは正式な一般開発者向けSLAや永続利用保証を確認できていません。公開・商用利用前にデータ利用規約、ロゴ利用、キャッシュ、再配信条件を確認してください。
-- TheSportsDBの無料APIはリクエスト制限があり、無料枠ではライブスコア機能を提供しないと案内されています。データは補助的な日程・結果としてのみ利用します。利用条件: https://www.thesportsdb.com/docs_terms_of_use.php
-- NPB・B.LEAGUEはTheSportsDBからリーグ別のシーズンデータを取得する処理を追加しました。無料APIの応答・対象日・対象シーズンは未保証で、ライブ速報の代替にはなりません。公式サイトへのリンクも併設します。B.LEAGUEの利用規約では、コンテンツの複製・公衆送信等に事前許可が必要とされています。許諾なしのHTMLスクレイピングや再配信は行いません。NPBも試合データの公開再配信に関する条件確認が必要なため、まずは公式ページへのリンクを使用します。
-- JリーグのESPN対応は対象コードを追加していますが、実際のレスポンス/CORSをiPhone Safariで確認する必要があります。
-- ブラウザのネットワーク制限、API側の変更、CORS、リーグの季節によって試合数は変わります。
-- この環境から外部APIへの直接接続テストはできなかったため、追加リーグ・TheSportsDBの実レスポンスは未検証です。iPhoneで公開URLを開いて確認してください。
+## データ利用
+ESPNの公開エンドポイントおよびTheSportsDBの利用条件・ロゴ・再配信条件を確認した上で公開してください。公式サイトをHTMLスクレイピングして再配信する処理は、許諾・利用条件が確認できていないため実装していません。
